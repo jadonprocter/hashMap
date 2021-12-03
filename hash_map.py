@@ -158,26 +158,27 @@ class HashMap:
         """
         return self.size / self.capacity
 
+    def get_map(self) -> DynamicArray:
+        return self.buckets
+
+    def get_size(self):
+        return self.size
+
     def resize_table(self, new_capacity: int) -> None:
         """
         TODO: Write this implementation
         """
-        # a da of keys and a da of values
-        key_table = self.get_keys()
-        value_table = self.get_values()
-        # a new DA of linked lists
-        new_da = DynamicArray()
-        for i in range(new_capacity):
-            new_da.append(LinkedList())
+        new_hash_map = HashMap(new_capacity, self.hash_function)
+        key_array = self.get_keys()
+        value_array = self.get_values()
+        for i in range(key_array.length()):
+            key = key_array.get_at_index(i)
+            value = value_array.get_at_index(i)
+            new_hash_map.put(key, value)
 
-        # iterate and rehash the values
-        for i in range(key_table.length()):
-            key = key_table.get_at_index(i)
-            value = value_table.get_at_index(i)
-            bucket = new_da.get_at_index(self.hash_function(key) % new_capacity)
-            bucket.insert(key, value)
+        self.buckets = new_hash_map.get_map()
         self.capacity = new_capacity
-        self.buckets = new_da
+        self.size = self.size - 1
 
         return None
 
