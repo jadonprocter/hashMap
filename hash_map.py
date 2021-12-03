@@ -64,28 +64,54 @@ class HashMap:
         """
         # set buckets to new  LL
         for i in range(self.buckets.length()):
-            bucket = self.buckets.get_at_index(i)
-            if bucket is LinkedList:
-                bucket = LinkedList()
-        pass
+            self.buckets.set_at_index(i, LinkedList())
+        self.size = 0
 
     def get(self, key: str) -> object:
         """
         TODO: Write this implementation
         """
+        # check if key is in table
+        if self.contains_key(key) is False:
+            return None
         # hash function to find index
-        # return Obj at that index
-        return None
+        hash_key_index = self.hash_function(key) % self.capacity
+        node = self.buckets.get_at_index(hash_key_index).contains(key)
+        return node.value
+
+    @staticmethod
+    def is_row_full(row: LinkedList) -> bool:
+        """
+        description:
+        """
+        node = row.next
+        for i in range(row.length()):
+            if node.next is None and i != row.length():
+                return False
+            elif node is not None:
+                node = node.next
+            else:
+                return True
 
     def put(self, key: str, value: object) -> None:
         """
         TODO: Write this implementation
         """
-        # Use hash map to find place
-        # check if full
-        # if empty put in empty space
-        # if full find next empty space
-        pass
+        if self.contains_key(key) is True:
+            hash_key_index = self.hash_function(key) % self.capacity
+            bucket = self.buckets.get_at_index(hash_key_index)
+            node = bucket.contains(key)
+            node.value = value
+        else:
+            # Use hash map to find place
+            hash_key_index = self.hash_function(key) % self.capacity
+            if hash_key_index >= self.capacity:
+                self.resize_table(hash_key_index)
+            bucket = self.buckets.get_at_index(hash_key_index)
+            bucket.insert(key, value)
+            # if bucket.length() == 1:
+            self.size = self.size + 1
+        return None
 
     @staticmethod
     def tombstone():
@@ -95,14 +121,23 @@ class HashMap:
         """
         TODO: Write this implementation
         """
+        if self.contains_key(key) is False:
+            return None
         # find place based on key
-        # replace element with TOMBSTONE
-        pass
+        hash_key_index = self.hash_function(key) % self.capacity
+        bucket = self.buckets.get_at_index(hash_key_index)
+        bucket.remove(key)
+        return None
 
     def contains_key(self, key: str) -> bool:
         """
         TODO: Write this implementation
         """
+        # go through each LL and see if it contains the key
+        for i in range(self.buckets.length()):
+            bucket = self.buckets.get_at_index(i)
+            if bucket.contains(key) is not None:
+                return True
         return False
 
     def empty_buckets(self) -> int:
@@ -113,7 +148,7 @@ class HashMap:
         # go through DA and return count of empty buckets
         for i in range(self.buckets.length()):
             bucket = self.buckets.get_at_index(i)
-            if bucket is not LinkedList and bucket != "_TS_":
+            if bucket.length() == 0:
                 count = count + 1
         return count
 
@@ -121,31 +156,51 @@ class HashMap:
         """
         TODO: Write this implementation
         """
-        count =  0
-        # for element in DA
-        for i in range(self.buckets.length()):
-            bucket = self.buckets.get_at_index(i)
-            # if element exists return amount of things in that LL
-            if bucket is LinkedList:
-                # add that to main count
-                count = count + bucket.length()
-
-        # take that count and divide it by length of the DA
-        LF = count/(self.buckets.length())
-        # return that num
-        return LF
+        return self.size / self.capacity
 
     def resize_table(self, new_capacity: int) -> None:
         """
         TODO: Write this implementation
         """
-        pass
+        # a da of keys and a da of values
+        key_table = self.get_keys()
+        value_table = self.get_values()
+        # a new DA of linked lists
+        new_da = DynamicArray()
+        for i in range(new_capacity):
+            new_da.append(LinkedList())
+
+        # iterate and rehash the values
+        for i in range(key_table.length()):
+            key = key_table.get_at_index(i)
+            value = value_table.get_at_index(i)
+            bucket = new_da.get_at_index(self.hash_function(key) % new_capacity)
+            bucket.insert(key, value)
+        self.capacity = new_capacity
+        self.buckets = new_da
+
+        return None
+
+    def get_values(self) -> DynamicArray:
+        da = DynamicArray()
+        for i in range(self.buckets.length()):
+            bucket = self.buckets.get_at_index(i)
+            if bucket.length() > 0:
+                for node in bucket:
+                    da.append(node.value)
+        return da
 
     def get_keys(self) -> DynamicArray:
         """
         TODO: Write this implementation
         """
-        return DynamicArray()
+        da = DynamicArray()
+        for i in range(self.buckets.length()):
+            bucket = self.buckets.get_at_index(i)
+            if bucket.length() > 0:
+                for node in bucket:
+                    da.append(node.key)
+        return da
 
 
 # BASIC TESTING
@@ -164,7 +219,6 @@ if __name__ == "__main__":
     m.put('key4', 40)
     print(m.empty_buckets(), m.size, m.capacity)
 
-
     print("\nPDF - empty_buckets example 2")
     print("-----------------------------")
     m = HashMap(50, hash_function_1)
@@ -172,7 +226,6 @@ if __name__ == "__main__":
         m.put('key' + str(i), i * 100)
         if i % 30 == 0:
             print(m.empty_buckets(), m.size, m.capacity)
-
 
     print("\nPDF - table_load example 1")
     print("--------------------------")
@@ -184,7 +237,6 @@ if __name__ == "__main__":
     print(m.table_load())
     m.put('key1', 30)
     print(m.table_load())
-
 
     print("\nPDF - table_load example 2")
     print("--------------------------")
@@ -205,7 +257,6 @@ if __name__ == "__main__":
     m.clear()
     print(m.size, m.capacity)
 
-
     print("\nPDF - clear example 2")
     print("---------------------")
     m = HashMap(50, hash_function_1)
@@ -219,7 +270,6 @@ if __name__ == "__main__":
     m.clear()
     print(m.size, m.capacity)
 
-
     print("\nPDF - put example 1")
     print("-------------------")
     m = HashMap(50, hash_function_1)
@@ -228,7 +278,6 @@ if __name__ == "__main__":
         if i % 25 == 24:
             print(m.empty_buckets(), m.table_load(), m.size, m.capacity)
 
-
     print("\nPDF - put example 2")
     print("-------------------")
     m = HashMap(40, hash_function_2)
@@ -236,7 +285,6 @@ if __name__ == "__main__":
         m.put('str' + str(i // 3), i * 100)
         if i % 10 == 9:
             print(m.empty_buckets(), m.table_load(), m.size, m.capacity)
-
 
     print("\nPDF - contains_key example 1")
     print("----------------------------")
@@ -251,7 +299,6 @@ if __name__ == "__main__":
     print(m.contains_key('key3'))
     m.remove('key3')
     print(m.contains_key('key3'))
-
 
     print("\nPDF - contains_key example 2")
     print("----------------------------")
@@ -268,14 +315,12 @@ if __name__ == "__main__":
         result &= not m.contains_key(str(key + 1))
     print(result)
 
-
     print("\nPDF - get example 1")
     print("-------------------")
     m = HashMap(30, hash_function_1)
     print(m.get('key'))
     m.put('key1', 10)
     print(m.get('key1'))
-
 
     print("\nPDF - get example 2")
     print("-------------------")
@@ -287,7 +332,6 @@ if __name__ == "__main__":
         print(i, m.get(str(i)), m.get(str(i)) == i * 10)
         print(i + 1, m.get(str(i + 1)), m.get(str(i + 1)) == (i + 1) * 10)
 
-
     print("\nPDF - remove example 1")
     print("----------------------")
     m = HashMap(50, hash_function_1)
@@ -298,7 +342,6 @@ if __name__ == "__main__":
     print(m.get('key1'))
     m.remove('key4')
 
-
     print("\nPDF - resize example 1")
     print("----------------------")
     m = HashMap(20, hash_function_1)
@@ -306,7 +349,6 @@ if __name__ == "__main__":
     print(m.size, m.capacity, m.get('key1'), m.contains_key('key1'))
     m.resize_table(30)
     print(m.size, m.capacity, m.get('key1'), m.contains_key('key1'))
-
 
     print("\nPDF - resize example 2")
     print("----------------------")
@@ -327,7 +369,6 @@ if __name__ == "__main__":
             result &= m.contains_key(str(key))
             result &= not m.contains_key(str(key + 1))
         print(capacity, result, m.size, m.capacity, round(m.table_load(), 2))
-
 
     print("\nPDF - get_keys example 1")
     print("------------------------")
