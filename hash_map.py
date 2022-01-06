@@ -3,7 +3,7 @@
 # Course: CS261 - Data Structures
 # Assignment:  Hash Map, Assignment 7 -- Portfolio Assignment
 # Due Date: 11/28/21
-# Description:
+# Description: implements a HashMap Class
 
 
 # Import pre-written DynamicArray and LinkedList classes
@@ -127,6 +127,7 @@ class HashMap:
         hash_key_index = self.hash_function(key) % self.capacity
         bucket = self.buckets.get_at_index(hash_key_index)
         bucket.remove(key)
+        self.size = self.size - 1
         return None
 
     def contains_key(self, key: str) -> bool:
@@ -178,7 +179,7 @@ class HashMap:
 
         self.buckets = new_hash_map.get_map()
         self.capacity = new_capacity
-        self.size = self.size - 1
+        self.size = self.size
 
         return None
 
